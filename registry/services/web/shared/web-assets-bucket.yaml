@@ -1,0 +1,5 @@
+name: web-assets-bucket
+type: s3-bucket
+config:
+  versioning: false
+  retention_days: 7

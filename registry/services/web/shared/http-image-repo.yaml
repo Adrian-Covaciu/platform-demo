@@ -1,0 +1,4 @@
+name: http-image-repo
+type: ecr-repo
+config:
+  image_tag_mutability: IMMUTABLE
