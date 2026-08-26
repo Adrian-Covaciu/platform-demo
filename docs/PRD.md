@@ -41,7 +41,6 @@ Directly adopted "ideas worth stealing" from `registry-review.md`:
   operational overhead of a second repo a solo project doesn't need.
 - Workload-type polymorphism (`api` / `worker` / `cronjob`, ...) as a bounded,
   schema-gated enum.
-- Single override tier as the MVP — no Kustomize-style N-level rabbit hole.
 - Schema-first, with a typed loader (Pydantic) from day one rather than
   retrofitted, directly answering the review's #1 critique of
   `retailer_output.py`'s untyped, mutating-dict style.
@@ -58,8 +57,6 @@ Directly adopted "improvements for a from-scratch version":
 - Bake a `rendered_schema_version` into the rendered artifact.
 - Enforce cross-file uniqueness (component/resource names) at schema/
   validation time, so a collision is caught on load.
-- Adopt a documented array-merge policy (the review flags this as
-  undocumented and dangerous in the original system).
 
 ## Functional requirements
 
@@ -84,14 +81,7 @@ Directly adopted "improvements for a from-scratch version":
   lives inside its service's namespace, so cross-service reuse never
   collides.
 
-### FR2 — Single-tier override with a documented merge policy
-- Exactly two layers: a base definition and one `env-type` override
-  (e.g. `dev`, `staging`, `prod`).
-- Merge policy is explicit and documented: dicts deep-merge key-by-key;
-  arrays **replace** by default; an override MAY opt into append semantics
-  with an explicit `!merge` tag on that key. No other implicit behavior.
-
-### FR3 — Typed loader with fail-hard / warn-skip split
+### FR2 — Typed loader with fail-hard / warn-skip split
 - Loader raises immediately (fails the CLI invocation) on: a referenced
   file that doesn't exist, a schema validation error, or a duplicate
   name.
@@ -100,27 +90,27 @@ Directly adopted "improvements for a from-scratch version":
   data-quality issues that shouldn't block unrelated services from
   rendering.
 
-### FR4 — CLI (Click)
+### FR3 — CLI (Click)
 - `platform validate` — load and validate the registry, no output written.
-- `platform generate [--instance NAME]` — run the full load → merge →
-  synth pipeline, writing `rendered/<instance>/*.yaml`.
+- `platform generate [--instance NAME]` — run the full load → synth
+  pipeline, writing `rendered/<instance>/*.yaml`.
 - `platform diff [--instance NAME]` — generate to a temp path and diff
   against the committed `rendered/` output.
 - `platform impact <path>` (stretch, may slip past v1) — given a changed
   registry file, list the rendered manifests that would change.
 
-### FR5 — CDK8s synthesizer
+### FR4 — CDK8s synthesizer
 - A `K8sWorkload` base construct with `Api`, `Worker`, `Cronjob` subclasses.
 - Deterministic output: re-running `generate` with no registry changes
   produces byte-identical YAML (required for the `platform diff` story).
 
-### FR6 — Rendered artifact
+### FR5 — Rendered artifact
 - Every generated manifest set is written under `rendered/<platform-
   instance>/` and stamped with a `rendered_schema_version` the loader
   checks on any future "load rendered output" path, rejecting unknown
   versions rather than guessing.
 
-### FR7 — GitOps wiring
+### FR6 — GitOps wiring
 - A bootstrap script stands up a local `kind` cluster and installs ArgoCD.
 - An ArgoCD `Application` manifest points at this repo's `rendered/`
   directory.
@@ -140,13 +130,17 @@ Directly adopted "improvements for a from-scratch version":
 These are explicitly deferred, not overlooked — each maps to a specific
 item raised in `registry-review.md`:
 
-- **Multi-tier overrides** (default → instance → env-type → env-instance).
-  Review critique #2 on `platform-registry`; deferred per the "single tier
-  as MVP" idea worth stealing.
+- **Override / env-type merge tier.** Review critique #2 flags multi-tier
+  as eventually necessary; this demo skips the override mechanism
+  entirely — each retailer's registry is fully specified, with no merge
+  step. Deferred to a future, separate synthesis repo (mirroring the
+  reviewed two-repo pattern) rather than bolted onto this single-repo
+  demo.
 - **Multiple environments per retailer** (test/sandbox/prod, each a
   separate AWS account with its own cluster). v1 treats each `Retailer` as
-  a single environment. Not a new mechanism when addressed later — it's
-  the same base + env-type override (ADR-0003) applied per retailer.
+  a single environment. Not a new mechanism when addressed later — it
+  would reuse whatever override tier a future two-repo implementation
+  adds, applied per retailer.
 - **CDKTF / real cloud infrastructure provisioning.** v1 is Kubernetes-only;
   no AWS/GCP resources are created, so there's no cost or credential
   surface.
@@ -162,7 +156,7 @@ item raised in `registry-review.md`:
 - **Incremental/impact-aware regeneration.** Review critique #8 on
   `platform-registry`; at this repo's scale, regenerating everything on
   every change is fine.
-- **`kmi impact` full implementation.** Listed as FR4 stretch; may ship as
+- **`kmi impact` full implementation.** Listed as FR3 stretch; may ship as
   a stub or slip entirely without blocking the rest of v1.
 
 ## Success criteria
@@ -170,10 +164,9 @@ item raised in `registry-review.md`:
 1. A fresh clone, following the README, can: create a kind cluster, install
    ArgoCD, run `platform generate`, commit, and watch the cluster converge —
    with no manual kubectl edits.
-2. Editing one registry YAML field (e.g. a replica count override for
-   `staging`) and re-running `platform generate` changes exactly the
-   expected line(s) in `rendered/`, demonstrating the merge policy is
-   predictable.
+2. Editing one registry YAML field (e.g. a component's replica count) and
+   re-running `platform generate` changes exactly the expected line(s) in
+   `rendered/`, demonstrating the synth pipeline is deterministic.
 3. `platform validate` succeeds on a valid registry and fails meaningfully
    (a clear message, not a stack trace) when a registry file is
    intentionally broken.

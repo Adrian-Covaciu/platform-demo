@@ -25,7 +25,7 @@ file for the original architecture this project borrows ideas from.
 ## How it works (target design)
 
 ```
-registry/*.yaml  --(validate)--> merge (base + env override) --> CDK8s synth
+registry/*.yaml  --(validate)--> CDK8s synth
                  --> rendered/<instance>/*.yaml --> git commit
                  --> ArgoCD (watches rendered/) --> local kind cluster
 ```
@@ -56,7 +56,7 @@ registry/    # YAML source of truth — one file per entity, one directory per p
     <service>/service.yaml
       <component>/component.yaml   # every subdirectory except `shared/` is a component
       shared/<resource>.yaml       # this service's Resources, one file each
-src/platform_demo/   # the installable Python package (models, loader so far)
+src/platform_generator/   # the installable Python package (models, loader so far)
 tests/                # pytest suite
 docs/                 # PRD, ADRs, epics, stories
 ```
@@ -66,8 +66,7 @@ services in `registry/services/`; `registry/retailers/paris-lvh/` is a
 second, bare retailer with no `services:` showing the layout holds more
 than one client. See
 [`CLAUDE.md`](CLAUDE.md)'s "Domain model" section for what each entity
-means, and [ADR-0003](docs/adr/0003-single-override-tier-plus-merge-policy.md)
-for why overrides are structured this way.
+means.
 
 ## Project docs
 
@@ -83,7 +82,7 @@ sections above — are kept up to date as the codebase grows, not written
 once at the end.
 
 - [x] [Epic A — Registry & Schema](docs/epics/epic-a-registry-schema.md)
-- [ ] [Epic B — Typed Loader & Merge](docs/epics/epic-b-loader-merge.md)
+- [ ] [Epic B — Typed Loader](docs/epics/epic-b-loader-merge.md)
 - [ ] [Epic C — CLI](docs/epics/epic-c-cli.md)
 - [ ] [Epic D — CDK8s Synthesizer](docs/epics/epic-d-synthesizer.md)
 - [ ] [Epic E — GitOps Wiring](docs/epics/epic-e-gitops-wiring.md)
@@ -92,8 +91,7 @@ once at the end.
 ## Getting started
 
 Epic A is done (models, example registry, name-uniqueness loading) — no
-CLI, merge, synthesizer, or cluster bootstrap script yet. What's here
-today:
+CLI, synthesizer, or cluster bootstrap script yet. What's here today:
 
 ```
 python3 -m venv .venv

@@ -13,14 +13,13 @@ Design rationale for every non-obvious choice: `docs/adr/`.
 
 **Current state:** planning complete (`docs/PRD.md`, `docs/adr/`,
 `docs/epics/`, `docs/stories/`). Epic A is done: Pydantic registry models
-(`src/platform_demo/models.py`, A1), the example registry (`registry/`,
-A2), and `src/platform_demo/loader.py` (A3 — walks the registry and
-enforces name uniqueness at the scope where collisions can occur; see
-"Domain model" below). The loader does **not** yet merge base + env-type
-overrides, fail hard on missing files, or warn-skip bad data — that's
-Epic B (B1-B3). CLI (Epic C) and synthesizer (Epic D) don't exist yet.
-Build order is epic-by-epic per `docs/epics/README.md` (A → B → C/D → E →
-F).
+(`src/platform_generator/models.py`, A1), the example registry
+(`registry/`, A2), and `src/platform_generator/schema.py` (A3 — walks the
+registry and enforces name uniqueness at the scope where collisions can
+occur; see "Domain model" below). The loader does **not** yet fail hard
+on missing files or warn-skip bad data — that's Epic B. CLI (Epic C) and
+synthesizer (Epic D) don't exist yet. Build order is epic-by-epic per
+`docs/epics/README.md` (A → B → C/D → E → F).
 
 ## Domain model
 
@@ -47,9 +46,10 @@ can be referenced by more than one retailer. A retailer with no
 In a production-ready version a single retailer could have multiple
 environments (test/sandbox/prod), each its own AWS account with its own
 cluster — out of scope for this demo (see `docs/PRD.md`). When that's
-picked up, it is *not* a new mechanism: it's the retailer's registry
-re-rendered with different override values, i.e. the existing base +
-env-type override (ADR-0003) applied per retailer.
+picked up, it would need a base + env-type override tier — but that
+belongs to a future, separate synthesis repo (mirroring the reviewed
+two-repo pattern), not this one; it's explicitly out of scope here (see
+`docs/PRD.md`).
 
 **Name uniqueness follows the same hierarchy, not a blanket rule** (A3):
 a `Service` is a Kubernetes namespace, so its name only needs to be unique
@@ -86,8 +86,7 @@ Tech stack and architecture decisions are pre-made in `docs/adr/` — don't
 re-litigate them while implementing a story:
 
 - `0001` single repo, `rendered/` as the seam (no S3, no second repo)
-- `0002` Pydantic for registry models · `0003` single-tier override +
-  documented merge policy
+- `0002` Pydantic for registry models
 - `0004` CDK8s (Python) synthesizer · `0005` Click CLI
   (`platform <verb> <noun>`)
 - `0006` `rendered_schema_version` pin
@@ -101,7 +100,6 @@ before writing code for it, not just its epic summary.
 
 ```
 registry/*.yaml  --(Pydantic load + validate, ADR-0002)-->
-                 --(base + env-type deep merge, ADR-0003)-->
                  --(CDK8s synth, ADR-0004)--> rendered/<instance>/*.yaml
                  --(git commit)--> ArgoCD watching rendered/ (ADR-0008) --> kind cluster
 ```
@@ -113,8 +111,8 @@ pipeline: `validate` (load only), `generate` (full pipeline), `diff`
 Loader errors follow one rule throughout: a bad *invocation* (missing
 file, duplicate name, unparseable YAML) fails hard and stops the run; bad
 *data* on an otherwise-valid entity (an optional field absent) warns via
-`logging` and skips just that entity. See `docs/stories/b2-*.md` and
-`b3-*.md`.
+`logging` and skips just that entity. See `docs/stories/b1-*.md` and
+`b2-*.md`.
 
 ## Commands
 
