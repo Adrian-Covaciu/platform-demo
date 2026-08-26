@@ -1,13 +1,14 @@
 # Epic D — CDK8s Synthesizer
 
-**Goal:** turn merged registry models into Kubernetes manifests via CDK8s
-constructs, one per workload type, with a version-stamped rendered output.
+**Goal:** turn validated registry models into Kubernetes manifests via
+CDK8s constructs, one per workload type, with a version-stamped rendered
+output.
 
 **Related ADRs:**
 - [ADR-0004 — CDK8s Python synthesizer](../adr/0004-cdk8s-python-synthesizer.md)
 - [ADR-0006 — `rendered_schema_version` pin](../adr/0006-rendered-schema-version-pin.md)
 
-**Depends on:** [Epic A](epic-a-registry-schema.md) (models feed the constructs) and [Epic B](epic-b-loader-merge.md) (merged output is the synth input).
+**Depends on:** [Epic A](epic-a-registry-schema.md) (models feed the constructs) and [Epic B](epic-b-loader-merge.md) (validated registry output is the synth input).
 
 **Stories:**
 1. [D1. `K8sWorkload` base construct](../stories/d1-k8sworkload-base.md)

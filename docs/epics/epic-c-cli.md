@@ -1,12 +1,12 @@
 # Epic C — CLI
 
 **Goal:** ship the `<verb> <noun>` Click CLI (`validate`, `generate`,
-`diff`, and stretch `impact`) as thin commands delegating to the loader/
-merge/synth modules.
+`diff`, and stretch `impact`) as thin commands delegating to the
+loader/synth modules.
 
 **Related ADR:** [ADR-0005 — Click CLI structure](../adr/0005-click-cli-structure.md)
 
-**Depends on:** [Epic B](epic-b-loader-merge.md) (loader/merge must exist for commands to call into).
+**Depends on:** [Epic B](epic-b-loader-merge.md) (loader must exist for commands to call into).
 
 **Stories:**
 1. [C1. `platform validate`](../stories/c1-validate-command.md)
