@@ -1,11 +1,11 @@
 import yaml
-from models import *
+from src.platform_generator.models import *
 import os
 
 
 def load_yaml_file(path):
     with open(path, "r") as f:
-        return yaml.safe_load(f.read())
+        return yaml.safe_load(f)
 
 
 def load_component(service_path, name):
@@ -47,9 +47,5 @@ def load_retailers():
                 load_service(services_path, service_name)
                 for service_name in retailer_data.get("services", [])
             ]
-            yield retailer_data
+            yield Retailer.model_validate(retailer_data)
 
-
-for retailer_data in load_retailers():
-    retailer = Retailer.model_validate(retailer_data)
-    print(retailer.model_dump_json(indent=2))2
