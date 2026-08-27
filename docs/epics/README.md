@@ -9,8 +9,8 @@ short on purpose; the detail lives one level down.
 |---|---|---|
 | [A — Registry & Schema](epic-a-registry-schema.md) | Typed YAML registry, validated on load | 3 |
 | [B — Typed Loader](epic-b-loader-merge.md) | Fail-hard error handling | 1 |
-| [C — CLI](epic-c-cli.md) | `platform validate/generate/diff/impact` | 4 |
-| [D — CDK8s Synthesizer](epic-d-synthesizer.md) | Workload constructs → K8s manifests | 4 |
+| [C — CLI](epic-c-cli.md) | `platform validate` (CLI scaffold) | 1 |
+| [D — CDK8s Synthesizer](epic-d-synthesizer.md) | Workload constructs → K8s manifests, plus `generate`/`diff` | 6 |
 | [E — GitOps Wiring](epic-e-gitops-wiring.md) | kind + ArgoCD, end-to-end sync | 3 |
 | [F — Docs/Demo](epic-f-docs-demo.md) | README quickstart, demo script | 2 |
 
