@@ -1,5 +1,5 @@
 import yaml
-from src.platform_generator.models import *
+from .models import *
 import os
 
 

@@ -5,10 +5,14 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2",
     "PyYAML>=6",
+    "click>=8",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+
+[project.scripts]
+platform = "platform_generator.cli:cli"
 
 [build-system]
 requires = ["hatchling"]
