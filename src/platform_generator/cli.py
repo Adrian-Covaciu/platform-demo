@@ -14,5 +14,5 @@ def validate():
     except Exception as e:
         print(e)
         sys.exit(1)
-    
+
 cli.add_command(validate)

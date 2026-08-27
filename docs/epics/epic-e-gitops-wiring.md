@@ -4,8 +4,6 @@
 and verify by hand that the full edit → generate → commit → sync loop
 actually works.
 
-**Related ADR:** [ADR-0008 — ArgoCD on local kind](../adr/0008-argocd-on-local-kind.md)
-
 **Depends on:** [Epic D](epic-d-synthesizer.md) (needs rendered manifests to sync against).
 
 **Stories:**

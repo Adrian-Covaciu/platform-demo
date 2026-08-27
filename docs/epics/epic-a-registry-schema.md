@@ -4,8 +4,6 @@
 Pydantic models, so every later epic has real, schema-checked data to work
 against.
 
-**Related ADR:** [ADR-0002 — Pydantic typed registry models](../adr/0002-pydantic-typed-registry-models.md)
-
 **Stories:**
 1. [A1. Define Pydantic models for the registry](../stories/a1-pydantic-models.md)
 2. [A2. Author an example retailer registry](../stories/a2-example-registry.md)
