@@ -17,6 +17,7 @@ class Resource(BaseModel):
 class Component(BaseModel):
     name: str
     workload_type: WorkloadType
+    image: str
     schedule: str | None = None
 
 

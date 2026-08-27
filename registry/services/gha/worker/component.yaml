@@ -1,2 +1,3 @@
 name: worker
 workload_type: worker
+image: busybox:latest
