@@ -46,8 +46,11 @@ Directly adopted "ideas worth stealing" from `registry-review.md`:
   `retailer_output.py`'s untyped, mutating-dict style.
 - CDK8s over Helm/Kustomize for the synthesizer — real language, real types,
   real objects instead of string templates.
-- "Warn-and-skip on data quality, raise on invocation" — borrowed verbatim
-  as the error-handling rule for the loader and CLI.
+- Fail-hard loader errors: a missing referenced file, a duplicate name, or
+  a schema validation error all raise immediately and stop the run. The
+  reviewed system's "warn-and-skip on data quality" half was considered
+  and dropped in favor of one uniform rule — simpler to implement and
+  reason about, per this repo's simplicity-over-robustness bias.
 - CLI shipped as `<verb> <noun>` (`platform generate service`, etc.) —
   discoverable and scriptable.
 
@@ -81,14 +84,11 @@ Directly adopted "improvements for a from-scratch version":
   lives inside its service's namespace, so cross-service reuse never
   collides.
 
-### FR2 — Typed loader with fail-hard / warn-skip split
+### FR2 — Typed loader, fail-hard on any error
 - Loader raises immediately (fails the CLI invocation) on: a referenced
   file that doesn't exist, a schema validation error, or a duplicate
-  name.
-- Loader warns and skips (logs via `logging`, not `print`/`sys.stderr`) on:
-  a service with no components defined, an optional field absent — i.e.
-  data-quality issues that shouldn't block unrelated services from
-  rendering.
+  name. There is no warn-and-skip path — any loader error stops the
+  whole run.
 
 ### FR3 — CLI (Click)
 - `platform validate` — load and validate the registry, no output written.

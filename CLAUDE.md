@@ -11,16 +11,6 @@ manifests, reconciled onto a local `kind` cluster by ArgoCD. It exists to
 Python in a platform-engineering context. Full context: `docs/PRD.md`.
 Design rationale for every non-obvious choice: `docs/adr/`.
 
-**Current state:** planning complete (`docs/PRD.md`, `docs/adr/`,
-`docs/epics/`, `docs/stories/`). Epic A is done: Pydantic registry models
-(`src/platform_generator/models.py`, A1), the example registry
-(`registry/`, A2), and `src/platform_generator/schema.py` (A3 — walks the
-registry and enforces name uniqueness at the scope where collisions can
-occur; see "Domain model" below). The loader does **not** yet fail hard
-on missing files or warn-skip bad data — that's Epic B. CLI (Epic C) and
-synthesizer (Epic D) don't exist yet. Build order is epic-by-epic per
-`docs/epics/README.md` (A → B → C/D → E → F).
-
 ## Domain model
 
 The registry hierarchy, top to bottom — get this wrong and every model/
@@ -43,13 +33,8 @@ service by listing its catalog name under `services:`; the same service
 can be referenced by more than one retailer. A retailer with no
 `services:` key has zero services (that's a valid, supported case).
 
-In a production-ready version a single retailer could have multiple
-environments (test/sandbox/prod), each its own AWS account with its own
-cluster — out of scope for this demo (see `docs/PRD.md`). When that's
-picked up, it would need a base + env-type override tier — but that
-belongs to a future, separate synthesis repo (mirroring the reviewed
-two-repo pattern), not this one; it's explicitly out of scope here (see
-`docs/PRD.md`).
+Multiple environments per retailer (test/sandbox/prod) are explicitly
+out of scope for this demo — see `docs/PRD.md`.
 
 **Name uniqueness follows the same hierarchy, not a blanket rule** (A3):
 a `Service` is a Kubernetes namespace, so its name only needs to be unique
@@ -61,40 +46,30 @@ reusing a name across services can't collide. Don't default to "unique
 everywhere" for a new name field — derive the scope from where a real
 collision could occur.
 
-## Two rules that override normal instincts here
+## Rules that override normal instincts here
 
 1. **Simplicity beats robustness.** This is a learning project, not a
    production platform. When a story's acceptance criteria are satisfied
    by the plain, obvious implementation, stop there — don't add config
    knobs, extensibility hooks, or error handling for cases the acceptance
-   criteria don't mention. Prefer the stdlib and the smallest slice of a
-   library's API that does the job. Code should read as something a
-   learner would understand a year from now, not a demonstration of
-   Python's expressiveness. If a simpler version of a story would still
+   criteria don't mention. If a simpler version of a story would still
    satisfy its acceptance criteria, write the simpler version.
 2. **`README.md` is updated in the same change that outgrows it, not
    after.** Any change that adds a new module, CLI command, dependency, or
    manual setup step updates the matching section of `README.md` in the
-   same commit — "Getting started," "Repository layout," or the epic
-   progress checklist. When an epic's stories are all done, check it off
-   in the README. When unsure whether a change is README-worthy, update
-   it — a stale README costs more than an over-eager edit here.
+   same commit. When unsure whether a change is README-worthy, update it.
+3. **Acceptance criteria in `docs/epics/` and `docs/stories/` are a draft,
+   not a contract.** If a criterion looks wrong or conflicts with a later
+   design decision, flag it instead of building to the letter of the doc.
+   Doesn't apply to `docs/adr/` — those are settled (see below).
 
 ## Where decisions already live
 
 Tech stack and architecture decisions are pre-made in `docs/adr/` — don't
-re-litigate them while implementing a story:
-
-- `0001` single repo, `rendered/` as the seam (no S3, no second repo)
-- `0002` Pydantic for registry models
-- `0004` CDK8s (Python) synthesizer · `0005` Click CLI
-  (`platform <verb> <noun>`)
-- `0006` `rendered_schema_version` pin
-- `0008` ArgoCD on local `kind`, no cloud account
-
-Each file under `docs/stories/` links the ADR(s) it implements and the
-specific docs to read before starting it — read the story file itself
-before writing code for it, not just its epic summary.
+re-litigate them while implementing a story. Each file under
+`docs/stories/` links the ADR(s) it implements and the specific docs to
+read before starting it — read the story file itself before writing code
+for it, not just its epic summary.
 
 ## Architecture (target shape, once built)
 
@@ -108,11 +83,11 @@ The `platform` CLI (Click, ADR-0005) is the only entry point into this
 pipeline: `validate` (load only), `generate` (full pipeline), `diff`
 (dry-run against committed `rendered/`).
 
-Loader errors follow one rule throughout: a bad *invocation* (missing
-file, duplicate name, unparseable YAML) fails hard and stops the run; bad
-*data* on an otherwise-valid entity (an optional field absent) warns via
-`logging` and skips just that entity. See `docs/stories/b1-*.md` and
-`b2-*.md`.
+Loader errors fail hard, full stop: a missing file, unparseable YAML,
+duplicate name, or a file that parses but fails `Model.model_validate()`
+all stop the run and surface the underlying error — there is no
+warn-and-skip path. One bad entity anywhere in the registry fails the
+whole load. See `docs/stories/b1-*.md`.
 
 ## Commands
 

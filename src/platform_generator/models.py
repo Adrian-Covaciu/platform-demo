@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class WorkloadType(str, Enum):
@@ -26,6 +26,14 @@ class Service(BaseModel):
     components: list[Component] = Field(min_length=1)
     resources: list[Resource] = Field(default_factory=list)
 
+    @model_validator(mode="after")
+    def check_unique_resources(self) -> "Service":
+        seen = set()
+        for r in self.resources:
+            if r.name in seen:
+                raise ValueError(f"Duplicate resource name '{r.name}' in service '{self.name}'")
+            seen.add(r.name)
+        return self
 
 class Retailer(BaseModel):
     name: str

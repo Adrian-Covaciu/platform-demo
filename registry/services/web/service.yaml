@@ -1,3 +1,8 @@
 name: web
 components:
   - http
+resources:
+  - name: http-image-repo
+    type: ecr-repo
+  - name: web-assets-bucket
+    type: s3-bucket
