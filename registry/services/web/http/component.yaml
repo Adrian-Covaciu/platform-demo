@@ -1,3 +1,4 @@
 name: http
 workload_type: api
 image: nginx:latest
+port: 8080

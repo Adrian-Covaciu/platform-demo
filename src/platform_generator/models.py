@@ -18,6 +18,8 @@ class Component(BaseModel):
     name: str
     workload_type: WorkloadType
     image: str
+    replicas : int = 1
+    port: int | None = None
     schedule: str | None = None
 
 
