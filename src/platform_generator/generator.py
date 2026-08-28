@@ -1,6 +1,6 @@
 
 from cdk8s import App, Chart
-from .runtime import Worker, Api
+from .runtime import Worker, Api, CronJob
 from .loader import load_retailers
 import os
 
@@ -11,11 +11,13 @@ def get(name):
                 if component.name == name:
                     return component
 
+
 class Scratch(Chart):
     def __init__(self, scope, id):
         super().__init__(scope, id)
         Api(self, "http", component=get("http"))
         Worker(self, "worker", component=get("worker"))
+        CronJob(self, "db-cleaner", component=get("db-cleaner"))
 
 app = App()
 

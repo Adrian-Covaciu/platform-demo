@@ -12,7 +12,6 @@ class Worker(K8sWorkload):
                 metadata=k8s.ObjectMeta(labels=self.labels),
                 spec=k8s.PodSpec(containers=[self.container]),
             ),
-
         ))
 
 class Api(K8sWorkload):
@@ -23,7 +22,7 @@ class Api(K8sWorkload):
             image=self.container.image,
             ports=[k8s.ContainerPort(container_port=component.port)],
         )
-        
+
         k8s.KubeDeployment(self, "deployment", spec=k8s.DeploymentSpec(
             replicas=component.replicas,
             selector=k8s.LabelSelector(match_labels=self.labels),
@@ -39,3 +38,30 @@ class Api(K8sWorkload):
                 selector=self.labels,
             ),
         )
+
+class CronJob(K8sWorkload):
+    def __init__(self, scope, id, *, component):
+        super().__init__(scope, id, component=component)
+        container = k8s.Container(
+            name=self.container.name,
+            image=self.container.image,
+            ports=[k8s.ContainerPort(container_port=component.port)],
+        )
+
+        k8s.KubeCronJob(self, "cronjob", spec=k8s.CronJobSpec(
+            schedule=component.schedule,
+                successful_jobs_history_limit=3,
+                failed_jobs_history_limit=12,
+                job_template=k8s.JobTemplateSpec(
+                    spec=k8s.JobSpec(
+                        template=k8s.PodTemplateSpec(
+                            metadata=k8s.ObjectMeta(labels=self.labels),
+                            spec=k8s.PodSpec(
+                                restart_policy="OnFailure",
+                                containers=[container]
+                            )
+                        )
+                    )
+                )
+        ))
+

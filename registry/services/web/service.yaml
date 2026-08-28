@@ -1,6 +1,9 @@
 name: web
+
 components:
   - http
+  - db-cleaner
+  
 resources:
   - name: http-image-repo
     type: ecr-repo

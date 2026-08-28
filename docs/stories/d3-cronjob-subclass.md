@@ -11,9 +11,14 @@ think about.
 
 **Depends on:** [D1](d1-k8sworkload-base.md) — same base, same
 `.labels`/`.container`. Not on [D2](d2-api-worker-subclasses.md) — `Cronjob`
-shares nothing with `Api`/`Worker` beyond the D1 base, and needs neither
-`replicas` nor `port`. Same missing-ADR-0004 gap as D1/D2, not re-flagged
-here.
+shares nothing with `Api`/`Worker` beyond the D1 base, and needs no
+`replicas`. `port` is different: it's a generic `Component` field
+(`int | None = None`, introduced in D2) that isn't tied to
+`workload_type`, so a `cronjob` component may set it too — e.g. a job
+that connects out to a database on a fixed port — or leave it unset,
+just like `Worker`. Either is valid; what a `cronjob` never gets, with
+or without `port` set, is a `KubeService` — that stays exclusive to
+`Api`. Same missing-ADR-0004 gap as D1/D2, not re-flagged here.
 
 ## The concept: three levels of nesting, not two
 
@@ -109,6 +114,13 @@ committing, since it's new committed content, not just code).
 - No `KubeDeployment` or `KubeService` is produced for a `cronjob`
   component — `Cronjob` and `Api`/`Worker` are mutually exclusive
   outputs per component, driven by `workload_type`.
+- `port` on a `cronjob` component is optional, same as `Worker`:
+  `nightly-report` is built with no `port` set and must synthesize
+  cleanly regardless — `Cronjob`'s construction code can't assume
+  `component.port` is always present the way `Api`'s does. A `cronjob`
+  that does set `port` (a different component, not `nightly-report`)
+  gets it reflected as a container port on the `Job`'s pod, still with
+  no accompanying `KubeService`.
 - Re-synthesizing with no registry changes produces byte-identical
   output (same determinism check as D2, applied to `Cronjob`).
 

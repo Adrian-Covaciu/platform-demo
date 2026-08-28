@@ -1,3 +1,4 @@
 name: worker
 workload_type: worker
 image: busybox:latest
+port: 5000
