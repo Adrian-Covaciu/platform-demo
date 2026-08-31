@@ -1,4 +1,4 @@
-# D4. Write rendered output with the schema-version header
+# D5. Write rendered output with the schema-version header
 
 **Goal:** write the orchestration function this whole epic has been
 building toward — call it `generate_retailer(retailer: Retailer) -> None`
@@ -14,10 +14,14 @@ in this epic — everything before this was in-memory constructs.
 **Depends on:** [D1](d1-k8sworkload-base.md), [D2](d2-api-worker-subclasses.md),
 [D3](d3-cronjob-subclass.md) — this story's whole job is wiring those
 three classes together; it adds no new construct of its own.
-[Epic B](../epics/epic-b-loader-merge.md) — `load_retailers()` is what
-supplies the `Retailer` this function takes. `src/platform_generator/generator.py`
-is currently a 0-byte empty file; this story is the first to put anything
-in it besides D1–D3's class definitions.
+[D4](d4-service-namespace.md) — `Api`/`Worker`/`Cronjob` now take a
+`namespace` argument, and each service's `Chart` needs one `KubeNamespace`
+object alongside its workloads; this story is what actually calls into
+D4's namespace plumbing when it builds each chart, it doesn't add any new
+namespace logic of its own. [Epic B](../epics/epic-b-loader-merge.md) —
+`load_retailers()` is what supplies the `Retailer` this function takes.
+`src/platform_generator/generator.py` is currently a scratch file; this
+story is the first to put the real orchestration in it.
 
 **Related ADR:** ADR-0006 — `rendered_schema_version` pin — **this file
 does not exist.** See the flag below.
@@ -80,7 +84,7 @@ The judgment calls below fill that gap for now.
 4. **The loader-side "reject unknown versions" check is out of scope for
    this story.** FR5 describes it as something to happen "on any future
    'load rendered output' path" — and nothing in this epic reads
-   `rendered/` back into Python models; D5 only *writes* there, and D6
+   `rendered/` back into Python models; E1 only *writes* there, and E2
    only text-diffs two directories of files, it never parses either side
    into a `Retailer`. Building a version-check function with no caller
    yet would be exactly the "extensibility hook for a problem that
@@ -102,8 +106,13 @@ WORKLOAD_CLASSES = {
     WorkloadType.WORKER: Worker,
     WorkloadType.CRONJOB: Cronjob,
 }
-WORKLOAD_CLASSES[component.workload_type](chart, component.name, component=component)
+WORKLOAD_CLASSES[component.workload_type](
+    chart, component.name, component=component, namespace=service.name,
+)
 ```
+
+Per D4, each chart also gets one `KubeNamespace` built alongside its
+workloads, using the same `service.name` passed as `namespace=` above.
 
 A learner's instinct at this point is often to reach for a decorator-based
 registry (`@register_workload("api")`) so "adding a new workload type
@@ -147,9 +156,12 @@ framework.
   `next(r for r in load_retailers() if r.name == "acme")`), writes
   `rendered/acme/web.yaml` and `rendered/acme/gha.yaml`.
 - `rendered/acme/web.yaml` contains the `KubeDeployment` + `KubeService`
-  for `http` (D2's `Api`); `rendered/acme/gha.yaml` contains the
-  `KubeDeployment` for `worker` (D2's `Worker`) and the `KubeCronJob` for
-  `nightly-report` (D3's `Cronjob`, once that component exists per D3).
+  for `http` (D2's `Api`), plus a `KubeNamespace` named `web` (D4);
+  `rendered/acme/gha.yaml` contains the `KubeDeployment` for `worker`
+  (D2's `Worker`) and the `KubeCronJob` for `nightly-report` (D3's
+  `Cronjob`, once that component exists per D3), plus a `KubeNamespace`
+  named `gha`. Every namespaced object in each file has `metadata.namespace`
+  set to that file's service name, per D4.
 - Every file under `rendered/acme/` begins with
   `# rendered_schema_version: 1`.
 - Calling `generate_retailer` twice in a row with no registry changes in

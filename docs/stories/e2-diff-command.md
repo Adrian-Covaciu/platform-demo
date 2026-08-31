@@ -1,4 +1,4 @@
-# D6. `platform diff`
+# E2. `platform diff`
 
 **Goal:** ship `platform diff [--instance NAME]` — generate into a
 temporary directory (never touching the committed `rendered/`), then
@@ -10,12 +10,12 @@ answer: what does it mean to show someone a change without making it?
 
 **Depends on:**
 
-- [D5](d5-generate-command.md) — `platform diff` reuses the *exact same*
+- [E1](e1-generate-command.md) — `platform diff` reuses the *exact same*
   `generate_retailer` call `platform generate` uses, just pointed at a
   temp directory instead of `rendered/<instance>/`. Don't write a second
   "diff mode" synth path — two implementations of the same thing drifting
   apart over time is a much harder bug to notice than it sounds.
-- [D4](d4-rendered-schema-version.md) — the determinism guarantee this
+- [D5](d5-rendered-schema-version.md) — the determinism guarantee this
   command's entire premise rests on: if `generate_retailer` weren't
   byte-identical on repeated runs with no registry changes, `platform
   diff` would show spurious noise every single time, even against an
@@ -116,7 +116,7 @@ development.
   after the command exits, including when the diffed component was
   edited (the success path) and when the registry has an unrelated
   loader error (the failure path) — both must clean up.
-- `--instance` behaves the same way it does for `generate` (D5): omit it
+- `--instance` behaves the same way it does for `generate` (E1): omit it
   to diff every retailer, name one to diff only that one, name a
   nonexistent one to fail with a clear message.
 
@@ -124,4 +124,4 @@ development.
 
 - [Python `difflib`](https://docs.python.org/3/library/difflib.html) — read the whole module page once before writing anything; specifically compare `unified_diff`'s signature and example output against `context_diff` and `Differ`/`ndiff` so the choice is deliberate, not the first function that appeared in a search result.
 - [Python `tempfile`](https://docs.python.org/3/library/tempfile.html) — `TemporaryDirectory` as a context manager, and why it's preferred over `mkdtemp()` for anything short-lived.
-- [D4](d4-rendered-schema-version.md) and [D5](d5-generate-command.md) — this story adds no new synth logic; it should be nearly all diffing and temp-directory plumbing wrapped around a call this codebase already has.
+- [D5](d5-rendered-schema-version.md) and [E1](e1-generate-command.md) — this story adds no new synth logic; it should be nearly all diffing and temp-directory plumbing wrapped around a call this codebase already has.

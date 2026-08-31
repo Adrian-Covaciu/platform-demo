@@ -124,7 +124,7 @@ asks for, applied to class design instead of a config knob).
 - Changing only `registry/services/web/http/component.yaml`'s `replicas`
   to `3` and rebuilding changes `spec.replicas` in `Api`'s synthesized
   output from `1` to `3` and nothing else in that output — the
-  construct-level proof of PRD success criterion 2, ahead of D4/D5
+  construct-level proof of PRD success criterion 2, ahead of D5/E1
   actually writing files to disk.
 - No new field is added to make `port` required for `api` components at
   the schema level (per the judgment call above) — confirm this by *not*

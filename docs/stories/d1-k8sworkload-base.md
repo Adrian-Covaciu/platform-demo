@@ -143,7 +143,7 @@ three known, fixed subclasses don't need a plugin system.
   inside their service's namespace scope), and a random suffix would
   make the output different on every run, which breaks FR4's
   determinism requirement outright. Determinism here is not automatic
-  robustness — it's a hard requirement `platform diff` (D6) depends on.
+  robustness — it's a hard requirement `platform diff` (E2) depends on.
 - **`cdk8s import`, not hand-written K8s types.** Don't hand-write
   classes for `Container`, `PodSpec`, etc. — CDK8s ships a code generator
   (`cdk8s import k8s`) that turns the Kubernetes OpenAPI spec into typed

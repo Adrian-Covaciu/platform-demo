@@ -1,7 +1,7 @@
-# D5. `platform generate`
+# E1. `platform generate`
 
 **Goal:** ship `platform generate [--instance NAME]` in `cli.py`, wired
-to D4's `generate_retailer`. This is the story where a previously-empty
+to D5's `generate_retailer`. This is the story where a previously-empty
 module (`generator.py`) and a previously-thin CLI (`cli.py`, one command
 so far) actually meet — and where "tested end to end" stops being an
 abstract phrase and starts meaning something concrete: real files landing
@@ -9,10 +9,10 @@ under `rendered/`, checked against the real registry, with no mocks.
 
 **Depends on:**
 
-- [D4](d4-rendered-schema-version.md) — `generate_retailer` is the only
-  thing this command calls into; if you find yourself writing logic here
-  that decides *how* a manifest is built, it belongs in `generator.py`,
-  not `cli.py`.
+- [D5](d5-rendered-schema-version.md) — `generate_retailer` is
+  the only thing this command calls into; if you find yourself writing
+  logic here that decides *how* a manifest is built, it belongs in
+  `generator.py`, not `cli.py`.
 - [C1](c1-validate-command.md) — the `platform` CLI group and its
   `[project.scripts]` entry point already exist; this story adds a
   second command to the same `cli` group, it doesn't scaffold a new one.
@@ -20,7 +20,7 @@ under `rendered/`, checked against the real registry, with no mocks.
   for the general flag. The two judgment calls below are specific to
   this command (they were originally drafted for a `platform generate`
   story on the `epic-c` branch, before the synthesizer existed to back
-  it — sequencing it here, after D1–D4, is what finally makes them
+  it — sequencing it here, after Epic D, is what finally makes them
   testable instead of hypothetical).
 
 ## Judgment calls made in ADR-0005's absence
@@ -57,13 +57,13 @@ def generate(instance):
         if not retailers:
             raise click.ClickException(f"No such instance: {instance}")
     for retailer in retailers:
-        generate_retailer(retailer)             # D4 does the actual work
+        generate_retailer(retailer)             # D5 does the actual work
     click.echo("Generated")
 ```
 
 If a bug shows up here that's actually about *how* a `Deployment` gets
 built, or *which* file a service's manifests land in, that's a sign the
-fix belongs in `generator.py` (D4), not in `cli.py` — resist patching it
+fix belongs in `generator.py` (D5), not in `cli.py` — resist patching it
 in place just because it's convenient. Click's own docs frame commands
 this way for a reason: the CLI layer's only job is translating "the user
 typed this" into "call this function," the same division of
@@ -78,9 +78,9 @@ against the real `registry/` and inspect real files landing in
 `rendered/`. That's not a testing shortcut to feel uneasy about: `rendered/`
 is itself meant to be committed (ArgoCD watches it, per CLAUDE.md's
 architecture diagram), so it's real project content, not disposable test
-output, and D4's determinism guarantee is exactly what keeps repeated
+output, and D5's determinism guarantee is exactly what keeps repeated
 test runs from generating spurious diffs to accidentally commit. This is
-the practical payoff of D4's "byte-identical on re-run" requirement,
+the practical payoff of D5's "byte-identical on re-run" requirement,
 beyond satisfying FR4 as an abstract non-functional requirement.
 
 ## Acceptance criteria
@@ -97,11 +97,11 @@ beyond satisfying FR4 as an abstract non-functional requirement.
   nope`) fails with a clear message and a non-zero exit — no silent
   no-op, no partial write.
 - Running `platform generate` twice in a row with the registry unchanged
-  produces byte-identical files under `rendered/` both times (D4's
+  produces byte-identical files under `rendered/` both times (D5's
   determinism guarantee, now exercised through the actual CLI command a
   user would run).
 - Every file written under `rendered/<instance>/` carries the
-  `# rendered_schema_version: 1` header D4 produces — this command
+  `# rendered_schema_version: 1` header D5 produces — this command
   doesn't invent its own stamping logic, it just writes what
   `generate_retailer` returns.
 
@@ -109,4 +109,4 @@ beyond satisfying FR4 as an abstract non-functional requirement.
 
 - [Click — Options](https://click.palletsprojects.com/en/stable/options/) — for `--instance`.
 - [Click — Commands and Groups](https://click.palletsprojects.com/en/stable/commands/) — adding a second command to the existing `cli` group without restructuring it.
-- [D4](d4-rendered-schema-version.md) — read `generate_retailer`'s contract before wiring this command; this story should not need to know *how* that function works, only what it takes and does.
+- [D5](d5-rendered-schema-version.md) — read `generate_retailer`'s contract before wiring this command; this story should not need to know *how* that function works, only what it takes and does.
