@@ -62,6 +62,12 @@ collision could occur.
    not a contract.** If a criterion looks wrong or conflicts with a later
    design decision, flag it instead of building to the letter of the doc.
    Doesn't apply to `docs/adr/` — those are settled (see below).
+4. **Use the `python-mentor` agent for hands-on Python/DevOps work in this
+   repo, even when a prompt doesn't name it.** This is a learning project
+   first — implementation, review, and "how do I..."/"is this done?"
+   questions about this codebase should go through that agent's mentor
+   workflow (explain before implementing, confirm before writing/editing)
+   rather than direct, unmediated edits.
 
 ## Where decisions already live
 

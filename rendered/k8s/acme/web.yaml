@@ -1,0 +1,62 @@
+# rendered_schema_version: 1
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-http-deployment-c8d34d4f
+  namespace: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: http
+  template:
+    metadata:
+      labels:
+        app: http
+    spec:
+      containers:
+        - image: nginx:latest
+          name: http
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-http-service-c8b61452
+  namespace: web
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: http
+  type: ClusterIP
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: web-db-cleaner-cronjob-c8e617ca
+  namespace: web
+spec:
+  failedJobsHistoryLimit: 12
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: db-cleaner
+        spec:
+          containers:
+            - image: busybox:latest
+              name: db-cleaner
+              ports:
+                - containerPort: 3306
+          restartPolicy: OnFailure
+  schedule: "* * * * *"
+  successfulJobsHistoryLimit: 3
