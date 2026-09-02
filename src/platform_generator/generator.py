@@ -9,8 +9,8 @@ from .models import Retailer, WorkloadType
 WORKLOAD_CLASSES = {WorkloadType.API: Api, WorkloadType.WORKER: Worker, WorkloadType.CRONJOB: CronJob}
 
 
-def generate_retailer(retailer: Retailer) -> None:
-    outdir = f"rendered/k8s/{retailer.name}"
+def generate_retailer(retailer: Retailer, outdir: str | None = None) -> None:
+    outdir = outdir if outdir is not None else f"rendered/k8s/{retailer.name}"
     app = App(outdir=outdir, output_file_extension=".yaml")
     for service in retailer.services:
         chart = Chart(app, service.name)
