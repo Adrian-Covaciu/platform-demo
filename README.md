@@ -26,7 +26,7 @@ file for the original architecture this project borrows ideas from.
 
 ```
 registry/*.yaml  --(validate)--> CDK8s synth
-                 --> rendered/<instance>/*.yaml --> git commit
+                 --> rendered/<retailer>/*.yaml --> git commit
                  --> ArgoCD (watches rendered/) --> local kind cluster
 ```
 

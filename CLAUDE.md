@@ -18,8 +18,8 @@ loader/synth story built on it inherits the mistake:
 
 - **`Retailer`** — a client. Conceptually maps to its own Kubernetes
   cluster *and* environment, deployed as a unit (this is the
-  "platform-instance" referenced elsewhere as `--instance NAME` /
-  `rendered/<instance>/`).
+  "platform-instance" referenced elsewhere as `--retailer NAME` /
+  `rendered/<retailer>/`).
 - **`Service`** — a part required for a retailer to operate. Has:
   - one or more **`Component`s** (never zero) — a `Component` *is* a
     workload: `workload_type` (`api` / `worker` / `cronjob`) lives here,
@@ -81,7 +81,7 @@ for it, not just its epic summary.
 
 ```
 registry/*.yaml  --(Pydantic load + validate, ADR-0002)-->
-                 --(CDK8s synth, ADR-0004)--> rendered/<instance>/*.yaml
+                 --(CDK8s synth, ADR-0004)--> rendered/<retailer>/*.yaml
                  --(git commit)--> ArgoCD watching rendered/ (ADR-0008) --> kind cluster
 ```
 

@@ -1,6 +1,6 @@
 # E2. `platform diff`
 
-**Goal:** ship `platform diff [--instance NAME]` — generate into a
+**Goal:** ship `platform diff [--retailer NAME]` — generate into a
 temporary directory (never touching the committed `rendered/`), then
 print a unified diff (the `---`/`+++`/`@@`-hunk format `git diff` and
 `diff -u` both use) between each generated file and its committed
@@ -12,7 +12,7 @@ answer: what does it mean to show someone a change without making it?
 
 - [E1](e1-generate-command.md) — `platform diff` reuses the *exact same*
   `generate_retailer` call `platform generate` uses, just pointed at a
-  temp directory instead of `rendered/<instance>/`. Don't write a second
+  temp directory instead of `rendered/<retailer>/`. Don't write a second
   "diff mode" synth path — two implementations of the same thing drifting
   apart over time is a much harder bug to notice than it sounds.
 - [D5](d5-rendered-schema-version.md) — the determinism guarantee this
@@ -102,7 +102,7 @@ development.
   diff` prints no differences and exits `0`.
 - Temporarily editing a real registry file without regenerating or
   committing — e.g. bumping `registry/services/web/http/component.yaml`'s
-  `replicas` — and running `platform diff --instance acme` prints a
+  `replicas` — and running `platform diff --retailer acme` prints a
   unified diff showing exactly the `replicas:` line changing inside the
   generated `web.yaml` content, with `fromfile`/`tofile` labels that make
   clear which side is "committed" and which is "what generate would
@@ -116,7 +116,7 @@ development.
   after the command exits, including when the diffed component was
   edited (the success path) and when the registry has an unrelated
   loader error (the failure path) — both must clean up.
-- `--instance` behaves the same way it does for `generate` (E1): omit it
+- `--retailer` behaves the same way it does for `generate` (E1): omit it
   to diff every retailer, name one to diff only that one, name a
   nonexistent one to fail with a clear message.
 
