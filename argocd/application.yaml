@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: acme
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/Adrian-Covaciu/platform-demo.git
+    targetRevision: HEAD
+    path: rendered/k8s/acme
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true

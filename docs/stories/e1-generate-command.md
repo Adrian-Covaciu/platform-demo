@@ -1,6 +1,6 @@
 # E1. `platform generate`
 
-**Goal:** ship `platform generate [--instance NAME]` in `cli.py`, wired
+**Goal:** ship `platform generate [--retailer NAME]` in `cli.py`, wired
 to D5's `generate_retailer`. This is the story where a previously-empty
 module (`generator.py`) and a previously-thin CLI (`cli.py`, one command
 so far) actually meet — and where "tested end to end" stops being an
@@ -25,17 +25,17 @@ under `rendered/`, checked against the real registry, with no mocks.
 
 ## Judgment calls made in ADR-0005's absence
 
-1. **How `--instance` resolves to a retailer.** CLAUDE.md defines a
-   "platform-instance" as a `Retailer` (`--instance NAME` maps to
-   `rendered/<instance>/`), so `--instance NAME` means "the retailer
+1. **How `--retailer` resolves to a retailer.** CLAUDE.md defines a
+   "platform-instance" as a `Retailer` (`--retailer NAME` maps to
+   `rendered/<retailer>/`), so `--retailer NAME` means "the retailer
    whose `name` equals `NAME`." `load_retailers()` has no parameter to
    select one retailer — it always loads everything under
    `registry/retailers/`. This command filters in the CLI layer (load
-   everything, then pick one out of the list) rather than adding an
-   `instance=` parameter to the loader — the smaller change, and it
+   everything, then pick one out of the list) rather than adding a
+   `retailer=` parameter to the loader — the smaller change, and it
    leaves Epic B's already-shipped loader signature untouched.
-2. **`--instance` is optional; omitting it means "every retailer."**
-   FR3 shows it as `[--instance NAME]`. Omitting it runs
+2. **`--retailer` is optional; omitting it means "every retailer."**
+   FR3 shows it as `[--retailer NAME]`. Omitting it runs
    `generate_retailer` once per retailer currently in the registry
    (today: `acme`, `paris-lvh`) rather than requiring one or picking an
    arbitrary default — the simplest reading of "optional" that doesn't
@@ -49,13 +49,13 @@ command's entire body should read like:
 
 ```python
 @click.command()
-@click.option("--instance", default=None)
-def generate(instance):
+@click.option("--retailer", default=None)
+def generate(retailer):
     retailers = list(load_retailers())          # fail-hard, same as validate
-    if instance is not None:
-        retailers = [r for r in retailers if r.name == instance]
+    if retailer is not None:
+        retailers = [r for r in retailers if r.name == retailer]
         if not retailers:
-            raise click.ClickException(f"No such instance: {instance}")
+            raise click.ClickException(f"No such retailer: {retailer}")
     for retailer in retailers:
         generate_retailer(retailer)             # D5 does the actual work
     click.echo("Generated")
@@ -85,28 +85,28 @@ beyond satisfying FR4 as an abstract non-functional requirement.
 
 ## Acceptance criteria
 
-- `platform generate --instance acme` loads and validates the *entire*
+- `platform generate --retailer acme` loads and validates the *entire*
   registry (a loader error anywhere — not just in `acme`'s own files —
   still stops the command, per the fail-hard rule already established
   by `validate`), then synthesizes only `acme` and writes
   `rendered/acme/*.yaml`, leaving `rendered/paris-lvh/` untouched if it
   already exists.
-- `platform generate` with no `--instance` does the same for every
+- `platform generate` with no `--retailer` does the same for every
   retailer currently in the registry (`acme` and `paris-lvh` today).
-- `--instance` naming a retailer that doesn't exist (e.g. `--instance
+- `--retailer` naming a retailer that doesn't exist (e.g. `--retailer
   nope`) fails with a clear message and a non-zero exit — no silent
   no-op, no partial write.
 - Running `platform generate` twice in a row with the registry unchanged
   produces byte-identical files under `rendered/` both times (D5's
   determinism guarantee, now exercised through the actual CLI command a
   user would run).
-- Every file written under `rendered/<instance>/` carries the
+- Every file written under `rendered/<retailer>/` carries the
   `# rendered_schema_version: 1` header D5 produces — this command
   doesn't invent its own stamping logic, it just writes what
   `generate_retailer` returns.
 
 ## 📚 Read before starting this story
 
-- [Click — Options](https://click.palletsprojects.com/en/stable/options/) — for `--instance`.
+- [Click — Options](https://click.palletsprojects.com/en/stable/options/) — for `--retailer`.
 - [Click — Commands and Groups](https://click.palletsprojects.com/en/stable/commands/) — adding a second command to the existing `cli` group without restructuring it.
 - [D5](d5-rendered-schema-version.md) — read `generate_retailer`'s contract before wiring this command; this story should not need to know *how* that function works, only what it takes and does.

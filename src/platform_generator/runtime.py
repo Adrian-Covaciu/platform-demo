@@ -5,7 +5,7 @@ from .workload import K8sWorkload
 class Worker(K8sWorkload):
     def __init__(self, scope, id, *, component, namespace):
         super().__init__(scope, id, component=component, namespace=namespace)
-        k8s.KubeDeployment(self, "deployment", metadata=k8s.ObjectMeta(namespace=self.namespace), spec=k8s.DeploymentSpec(
+        k8s.KubeDeployment(self, "deployment", metadata=k8s.ObjectMeta(name=component.name, namespace=self.namespace), spec=k8s.DeploymentSpec(
             replicas=component.replicas,
             selector=k8s.LabelSelector(match_labels=self.labels),
             template=k8s.PodTemplateSpec(
@@ -20,10 +20,11 @@ class Api(K8sWorkload):
         container = k8s.Container(
             name=self.container.name,
             image=self.container.image,
+            command=self.container.command,
             ports=[k8s.ContainerPort(container_port=component.port)],
         )
 
-        k8s.KubeDeployment(self, "deployment", metadata=k8s.ObjectMeta(namespace=self.namespace), spec=k8s.DeploymentSpec(
+        k8s.KubeDeployment(self, "deployment", metadata=k8s.ObjectMeta(name=component.name, namespace=self.namespace), spec=k8s.DeploymentSpec(
             replicas=component.replicas,
             selector=k8s.LabelSelector(match_labels=self.labels),
             template=k8s.PodTemplateSpec(
@@ -32,7 +33,7 @@ class Api(K8sWorkload):
             ),
         ))
 
-        k8s.KubeService(self, "service", metadata=k8s.ObjectMeta(namespace=self.namespace), spec=k8s.ServiceSpec(
+        k8s.KubeService(self, "service", metadata=k8s.ObjectMeta(name=component.name, namespace=self.namespace), spec=k8s.ServiceSpec(
                 type="ClusterIP",
                 ports=[k8s.ServicePort(port=component.port, target_port=k8s.IntOrString.from_number(component.port))],
                 selector=self.labels,
@@ -45,10 +46,11 @@ class CronJob(K8sWorkload):
         container = k8s.Container(
             name=self.container.name,
             image=self.container.image,
+            command=self.container.command,
             ports=[k8s.ContainerPort(container_port=component.port)],
         )
 
-        k8s.KubeCronJob(self, "cronjob", metadata=k8s.ObjectMeta(namespace=self.namespace), spec=k8s.CronJobSpec(
+        k8s.KubeCronJob(self, "cronjob", metadata=k8s.ObjectMeta(name=component.name, namespace=self.namespace), spec=k8s.CronJobSpec(
             schedule=component.schedule,
                 successful_jobs_history_limit=3,
                 failed_jobs_history_limit=12,

@@ -92,9 +92,9 @@ Directly adopted "improvements for a from-scratch version":
 
 ### FR3 — CLI (Click)
 - `platform validate` — load and validate the registry, no output written.
-- `platform generate [--instance NAME]` — run the full load → synth
-  pipeline, writing `rendered/<instance>/*.yaml`.
-- `platform diff [--instance NAME]` — generate to a temp path and diff
+- `platform generate [--retailer NAME]` — run the full load → synth
+  pipeline, writing `rendered/<retailer>/*.yaml`.
+- `platform diff [--retailer NAME]` — generate to a temp path and diff
   against the committed `rendered/` output.
 - `platform impact <path>` (stretch, may slip past v1) — given a changed
   registry file, list the rendered manifests that would change.
@@ -105,8 +105,8 @@ Directly adopted "improvements for a from-scratch version":
   produces byte-identical YAML (required for the `platform diff` story).
 
 ### FR5 — Rendered artifact
-- Every generated manifest set is written under `rendered/<platform-
-  instance>/` and stamped with a `rendered_schema_version` the loader
+- Every generated manifest set is written under `rendered/<retailer>/`
+  and stamped with a `rendered_schema_version` the loader
   checks on any future "load rendered output" path, rejecting unknown
   versions rather than guessing.
 

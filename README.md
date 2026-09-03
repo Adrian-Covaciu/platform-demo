@@ -26,7 +26,7 @@ file for the original architecture this project borrows ideas from.
 
 ```
 registry/*.yaml  --(validate)--> CDK8s synth
-                 --> rendered/<instance>/*.yaml --> git commit
+                 --> rendered/<retailer>/*.yaml --> git commit
                  --> ArgoCD (watches rendered/) --> local kind cluster
 ```
 
@@ -43,6 +43,7 @@ previews what would change before committing.
 | Manifest synthesis | [CDK8s](https://cdk8s.io/) (Python) | real typed objects, not templating |
 | GitOps controller | [ArgoCD](https://argo-cd.readthedocs.io/) | pull-based sync from git |
 | Local cluster | [kind](https://kind.sigs.k8s.io/) | zero-cost, reproducible |
+| Ingress | [Traefik](https://traefik.io/) (via [Helm](https://helm.sh/)) | reach the ArgoCD/app UI from the local cluster |
 
 Full rationale for each choice: [`docs/adr/`](docs/adr/).
 
@@ -92,9 +93,6 @@ once at the end.
 
 ## Getting started
 
-Epic A is done (models, example registry, name-uniqueness loading) — no
-CLI, synthesizer, or cluster bootstrap script yet. What's here today:
-
 ```
 python3 -m venv .venv
 .venv/bin/pip install -e ".[dev]"
@@ -103,6 +101,36 @@ python3 -m venv .venv
 
 This section grows as each epic lands; [`docs/epics/README.md`](docs/epics/README.md)
 describes the build order until then.
+
+### Bootstrapping a local cluster with ArgoCD
+
+Requires Docker running locally, and `kind`, `kubectl`, and `helm` on
+your `$PATH`:
+
+```
+./scripts/bootstrap-cluster.sh
+```
+
+This creates a `kind` cluster named `platform-demo`, installs Traefik
+as its ingress controller, and installs ArgoCD, waiting until every
+ArgoCD pod is `Ready` before exiting. It's safe to run more than once —
+it skips creating the cluster or `argocd` namespace if either already
+exists. Its last line of output prints the command to retrieve the
+ArgoCD admin password.
+
+### Pointing ArgoCD at this repo
+
+Once the cluster and ArgoCD are up, apply the `Application` that tells
+ArgoCD to watch this repo's rendered `acme` output:
+
+```
+kubectl apply -f argocd/application.yaml
+```
+
+This creates an `Application` named `acme` in the `argocd` namespace,
+scoped to `rendered/k8s/acme` only (see `docs/stories/e4-argocd-application.md`
+for why `paris-lvh` isn't included). With `syncPolicy.automated` set, it
+syncs on its own within one cycle — no `argocd app sync` needed.
 
 ### Regenerating `src/platform_generator/imports/`
 
