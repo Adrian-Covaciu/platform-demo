@@ -88,7 +88,7 @@ once at the end.
 - [ ] [Epic B — Typed Loader](docs/epics/epic-b-loader-merge.md)
 - [ ] [Epic C — CLI](docs/epics/epic-c-cli.md)
 - [ ] [Epic D — CDK8s Synthesizer](docs/epics/epic-d-synthesizer.md)
-- [ ] [Epic E — GitOps Wiring](docs/epics/epic-e-gitops-wiring.md)
+- [x] [Epic E — GitOps Wiring](docs/epics/epic-e-gitops-wiring.md)
 - [ ] [Epic F — Docs/Demo](docs/epics/epic-f-docs-demo.md)
 
 ## Getting started
@@ -131,6 +131,40 @@ This creates an `Application` named `acme` in the `argocd` namespace,
 scoped to `rendered/k8s/acme` only (see `docs/stories/e4-argocd-application.md`
 for why `paris-lvh` isn't included). With `syncPolicy.automated` set, it
 syncs on its own within one cycle — no `argocd app sync` needed.
+
+### Demo flow: registry edit to cluster
+
+With the cluster bootstrapped and the `Application` applied, this is the
+full FR6 loop, hands-on:
+
+```
+# 1. edit a registry file, e.g. add `replicas: 3` to
+#    registry/services/web/http/component.yaml
+
+# 2. preview what would change, before generating anything
+.venv/bin/platform diff --retailer acme
+
+# 3. render the change to rendered/k8s/acme/
+.venv/bin/platform generate --retailer acme
+
+# 4. commit and push both the registry edit and the regenerated file
+git add registry/services/web/http/component.yaml rendered/k8s/acme/web.yaml
+git commit -m "Scale acme web"
+git push
+
+# 5. ArgoCD polls git on its own default interval; force an immediate
+#    check instead of waiting for it
+kubectl patch application acme -n argocd --type merge \
+  -p '{"metadata": {"annotations": {"argocd.argoproj.io/refresh": "hard"}}}'
+
+# 6. confirm it synced on its own, no `argocd app sync` needed
+kubectl get application acme -n argocd
+kubectl get deployment -n web
+```
+
+`platform diff` and `platform generate` are documented in `docs/stories/e1-generate-command.md`
+and `docs/stories/e2-diff-command.md`; the full walkthrough, including
+reverting the change, is `docs/stories/e5-e2e-verification.md`.
 
 ### Regenerating `src/platform_generator/imports/`
 
