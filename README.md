@@ -118,6 +118,20 @@ it skips creating the cluster or `argocd` namespace if either already
 exists. Its last line of output prints the command to retrieve the
 ArgoCD admin password.
 
+### Pointing ArgoCD at this repo
+
+Once the cluster and ArgoCD are up, apply the `Application` that tells
+ArgoCD to watch this repo's rendered `acme` output:
+
+```
+kubectl apply -f argocd/application.yaml
+```
+
+This creates an `Application` named `acme` in the `argocd` namespace,
+scoped to `rendered/k8s/acme` only (see `docs/stories/e4-argocd-application.md`
+for why `paris-lvh` isn't included). With `syncPolicy.automated` set, it
+syncs on its own within one cycle — no `argocd app sync` needed.
+
 ### Regenerating `src/platform_generator/imports/`
 
 The typed Kubernetes classes under `imports/` (`k8s.Container`, etc.) are

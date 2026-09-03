@@ -20,6 +20,7 @@ class Api(K8sWorkload):
         container = k8s.Container(
             name=self.container.name,
             image=self.container.image,
+            command=self.container.command,
             ports=[k8s.ContainerPort(container_port=component.port)],
         )
 
@@ -45,6 +46,7 @@ class CronJob(K8sWorkload):
         container = k8s.Container(
             name=self.container.name,
             image=self.container.image,
+            command=self.container.command,
             ports=[k8s.ContainerPort(container_port=component.port)],
         )
 

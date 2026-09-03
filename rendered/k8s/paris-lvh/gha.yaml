@@ -20,5 +20,8 @@ spec:
         app: worker
     spec:
       containers:
-        - image: busybox:latest
+        - command:
+            - sleep
+            - infinity
+          image: busybox:latest
           name: worker

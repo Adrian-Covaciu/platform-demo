@@ -21,6 +21,7 @@ class Component(BaseModel):
     replicas : int = 1
     port: int | None = None
     schedule: str | None = None
+    command: list[str] | None = None
 
 
 class Service(BaseModel):
