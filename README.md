@@ -4,9 +4,29 @@ A personal, single-repo GitOps platform: engineers author schema-validated
 YAML describing services, a Python synthesizer turns it into Kubernetes
 manifests, and ArgoCD reconciles them onto a local cluster.
 
-**Status: 🚧 implementation started.** Epic A (registry models, example
-data, name-uniqueness checks) is done; nothing else yet — see
-[Project status](#project-status) below.
+**Status: 🚧 implementation in progress.** Epic A (registry & schema) and
+Epic E (GitOps wiring) are done — see [Project status](#project-status)
+below for the rest.
+
+## Quickstart
+
+Requires Docker running locally, and `kind`, `kubectl`, and `helm` on
+your `$PATH`. From a fresh clone, this gets a local cluster running the
+worked example (`acme`) end to end:
+
+```
+python3 -m venv .venv
+.venv/bin/pip install -e ".[dev]"
+.venv/bin/pytest
+
+./scripts/bootstrap-cluster.sh
+kubectl apply -f argocd/application.yaml
+
+kubectl get application acme -n argocd   # -> Synced / Healthy
+```
+
+See "Getting started" below for what each step does, and "Demo flow" for
+making a registry change and watching ArgoCD pick it up.
 
 ## Why this exists
 
@@ -61,7 +81,7 @@ src/platform_generator/   # the installable Python package
   imports/k8s/                     # generated K8s typed classes (`cdk8s import k8s`), committed
   workload.py                      # K8sWorkload — shared CDK8s construct base for Api/Worker/Cronjob
 tests/                # pytest suite
-docs/                 # PRD, ADRs, epics, stories
+docs/                 # PRD, ADRs, epics
 ```
 
 `registry/retailers/acme/` is the worked example, referencing both
@@ -76,7 +96,6 @@ means.
 - [`docs/PRD.md`](docs/PRD.md) — goals, requirements, what's explicitly out of scope for v1.
 - [`docs/adr/`](docs/adr/) — one decision record per major technical choice.
 - [`docs/epics/README.md`](docs/epics/README.md) — the 7 epics and build order.
-- [`docs/stories/`](docs/stories/) — one file per story: acceptance criteria + links to the specific documentation to read before starting it.
 
 ## Project status
 
@@ -89,7 +108,7 @@ once at the end.
 - [ ] [Epic C — CLI](docs/epics/epic-c-cli.md)
 - [ ] [Epic D — CDK8s Synthesizer](docs/epics/epic-d-synthesizer.md)
 - [x] [Epic E — GitOps Wiring](docs/epics/epic-e-gitops-wiring.md)
-- [ ] [Epic F — Docs/Demo](docs/epics/epic-f-docs-demo.md)
+- [x] [Epic F — Docs/Demo](docs/epics/epic-f-docs-demo.md)
 
 ## Getting started
 
@@ -128,9 +147,11 @@ kubectl apply -f argocd/application.yaml
 ```
 
 This creates an `Application` named `acme` in the `argocd` namespace,
-scoped to `rendered/k8s/acme` only (see `docs/stories/e4-argocd-application.md`
-for why `paris-lvh` isn't included). With `syncPolicy.automated` set, it
-syncs on its own within one cycle — no `argocd app sync` needed.
+scoped to `rendered/k8s/acme` only — `acme` and `paris-lvh` render
+identically-named Kubernetes objects for their shared catalog services,
+so syncing both into one cluster would silently overwrite one with the
+other. With `syncPolicy.automated` set, it syncs on its own within one
+cycle — no `argocd app sync` needed.
 
 ### Demo flow: registry edit to cluster
 
@@ -161,10 +182,6 @@ kubectl patch application acme -n argocd --type merge \
 kubectl get application acme -n argocd
 kubectl get deployment -n web
 ```
-
-`platform diff` and `platform generate` are documented in `docs/stories/e1-generate-command.md`
-and `docs/stories/e2-diff-command.md`; the full walkthrough, including
-reverting the change, is `docs/stories/e5-e2e-verification.md`.
 
 ### Regenerating `src/platform_generator/imports/`
 
