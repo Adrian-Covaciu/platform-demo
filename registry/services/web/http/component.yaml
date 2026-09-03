@@ -2,4 +2,3 @@ name: http
 workload_type: api
 image: nginx:latest
 port: 8080
-replicas: 3
